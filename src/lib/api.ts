@@ -2,8 +2,10 @@ import type { AxiosRequestConfig } from "axios";
 import axios, { AxiosError } from "axios";
 import { useAuth } from "../store/auth";
 
-const API_BASE_URL =
-    import.meta.env.DEV ? "" : (import.meta.env.VITE_API_BASE_URL as string | undefined) || "";
+const BASE = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
+const API_BASE_URL = import.meta.env.DEV
+    ? (import.meta.env.VITE_DEV_API_BASE_URL as string | undefined) || `${BASE}/api`
+    : (import.meta.env.VITE_API_BASE_URL as string | undefined) || `${BASE}/api`;
 
 export interface AuthResponse {
     tokenType: string;
@@ -40,12 +42,12 @@ export interface ContactsListResponse {
 }
 
 export const api = axios.create({
-    baseURL: API_BASE_URL,
+    baseURL: `${API_BASE_URL}/v1`,
     headers: { "Content-Type": "application/json" },
 });
 
 const authApi = axios.create({
-    baseURL: API_BASE_URL,
+    baseURL: `${API_BASE_URL}/v1`,
     headers: { "Content-Type": "application/json" },
 });
 
@@ -115,7 +117,7 @@ api.interceptors.response.use(
                 if (!rt) throw new Error("No refresh token");
 
                 const { data } = await authApi.post<{ accessToken: string; refreshToken: string }>(
-                    "/api/v1/auth/refresh-token",
+                    "/auth/refresh-token",
                     { refreshToken: rt }
                 );
 
@@ -142,17 +144,17 @@ api.interceptors.response.use(
 
 export const Auth = {
     login: (dto: LoginDTO) =>
-        authApi.post<AuthResponse>("/api/v1/auth/login", dto).then(r => r.data),
+        authApi.post<AuthResponse>("/auth/login", dto).then(r => r.data),
 
     resetPassword: (login: string) =>
-        authApi.post("/api/v1/auth/reset-password", { login }),
+        authApi.post("/auth/reset-password", { login }),
 
     register: (login: string, password: string) =>
-        authApi.post<void>("/api/v1/auth/register", { login, password }).then(() => {}),
+        authApi.post<void>("/auth/register", { login, password }).then(() => {}),
 
     refresh: async (body: { refreshToken: string }) => {
         const { data } = await authApi.post<{ accessToken: string; refreshToken: string }>(
-            `/api/v1/auth/refresh-token`,
+            `/auth/refresh-token`,
             body
         );
         return data;
@@ -160,22 +162,22 @@ export const Auth = {
 };
 
 export const Users = {
-    list: () => api.get<{ items: User[]; count: number }>("/api/v1/users").then(r => r.data),
-    get: (id: string) => api.get<User>(`/api/v1/users/${id}`).then(r => r.data),
+    list: () => api.get<{ items: User[]; count: number }>("/users").then(r => r.data),
+    get: (id: string) => api.get<User>(`/users/${id}`).then(r => r.data),
 };
 
 export const Chats = {
     list: () =>
-        api.get<{ chats: Chat[]; total: number }>("/api/v1/chats").then(r => r.data),
+        api.get<{ chats: Chat[]; total: number }>("/chats").then(r => r.data),
     getDirectChat: (peerId: string) =>
-        api.post<Chat>("/api/v1/chats/direct", { peerId }).then(r => r.data),
+        api.post<Chat>("/chats/direct", { peerId }).then(r => r.data),
     history: (chatId: string, afterId?: number, limit = 50) =>
         api.get<{ messages: Message[]; total: number }>(
-            `/api/v1/chats/${chatId}`,
+            `/chats/${chatId}`,
             { params: { afterId, limit } }
         ).then(r => r.data),
     latest: async (chatId: string): Promise<Message | null> => {
-        const { data } = await api.get<Message | { message?: Message | null }>(`/api/v1/chats/${chatId}/latest`);
+        const { data } = await api.get<Message | { message?: Message | null }>(`/chats/${chatId}/latest`);
         if (isMessageLike(data)) return data;
         if (data && typeof data === "object" && "message" in data) {
             const m = (data as any).message;
@@ -184,19 +186,19 @@ export const Chats = {
         return null;
     },
     sendText: (chatId: string, text: string) =>
-        api.post<Message>(`/api/v1/chats/${chatId}`, { text }).then(r => r.data),
+        api.post<Message>(`/chats/${chatId}`, { text }).then(r => r.data),
 };
 
 export const Contacts = {
     listMutual: () =>
-        api.get<ContactsListResponse>("/api/v1/contacts/mutual").then(r => r.data),
+        api.get<ContactsListResponse>("/contacts/mutual").then(r => r.data),
     listInbound: () =>
-        api.get<ContactsListResponse>("/api/v1/contacts/inbound").then(r => r.data),
+        api.get<ContactsListResponse>("/contacts/inbound").then(r => r.data),
     listOutbound: () =>
-        api.get<ContactsListResponse>("/api/v1/contacts/outbound").then(r => r.data),
+        api.get<ContactsListResponse>("/contacts/outbound").then(r => r.data),
     add: (peerId: string) =>
-        api.post<void>("/api/v1/contacts", { peerId }).then(() => {}),
+        api.post<void>("/contacts", { peerId }).then(() => {}),
     remove: (peerId: string) =>
-        api.delete<void>(`/api/v1/contacts/${peerId}`).then(() => {}),
+        api.delete<void>(`/contacts/${peerId}`).then(() => {}),
 };
 

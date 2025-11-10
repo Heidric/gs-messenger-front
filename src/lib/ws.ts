@@ -58,16 +58,11 @@ const listeners = {
     "voice.decline": [],
 } as { [K in IncomingType]: Array<(payload: IncomingPayloadMap[K]) => void> };
 
-const WS_PATH = "/api/v1/ws";
+const BASE = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
+const WS_PATH = `${BASE}/api/v1/ws`;
 
 function makeWsUrl() {
-    const base =
-        import.meta.env.DEV
-            ? window.location.origin
-            : (import.meta.env.VITE_API_BASE_URL as string | undefined) ||
-            window.location.origin;
-
-    const url = new URL(WS_PATH, base);
+    const url = new URL(WS_PATH, window.location.origin);
     url.protocol = url.protocol.replace("http", "ws");
 
     const t = useAuth.getState().accessToken;

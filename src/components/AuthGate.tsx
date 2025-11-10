@@ -6,7 +6,7 @@ export default function AuthGate() {
     const loc = useLocation();
 
     if (!isAuthed) {
-        return <Navigate to="/login" replace state={{ from: loc }} />;
+        return <Navigate to="login" replace state={{ from: loc }} />;
     }
     return <Outlet />;
 }
