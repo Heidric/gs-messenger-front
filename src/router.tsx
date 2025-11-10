@@ -10,8 +10,11 @@ import AuthGate from "./components/AuthGate";
 import AppLayout from "./layout/AppLayout";
 import UserProfilePage from "./pages/UserProfile";
 
-export const router = createBrowserRouter([
-    {
+const rawBase = import.meta.env.BASE_URL || "/";
+const basename = rawBase.endsWith("/") ? rawBase.slice(0, -1) : rawBase;
+
+export const router = createBrowserRouter(
+    [{
         element: <BootGate />,
         children: [
             { path: "/login", element: <Login /> },
@@ -34,5 +37,6 @@ export const router = createBrowserRouter([
                 ],
             },
         ],
-    },
-]);
+    }],
+    { basename }
+);
