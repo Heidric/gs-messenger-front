@@ -29,19 +29,10 @@ export default function ActiveCall() {
         }
     }, [remote]);
 
-    const [isFS, setFS] = useState(false);
-    useEffect(() => {
-        const onFs = () => setFS(!!document.fullscreenElement);
-        document.addEventListener("fullscreenchange", onFs);
-        return () => document.removeEventListener("fullscreenchange", onFs);
-    }, []);
-    const toggleFS = useCallback(async () => {
-        const el = containerRef.current;
-        if (!el) return;
-        try {
-            if (!document.fullscreenElement) await el.requestFullscreen();
-            else await document.exitFullscreen();
-        } catch {}
+    const [isFS, setFS] = useState(true);
+
+    const toggleFS = useCallback(() => {
+        setFS((prev) => !prev);
     }, []);
 
     type Pos = { x: number; y: number };
@@ -157,7 +148,12 @@ export default function ActiveCall() {
                             <video
                                 ref={remoteRef}
                                 onDoubleClick={toggleFS}
-                                style={{ display: "block", width: "100%", height: isFS ? "calc(100dvh - 120px)" : 240, objectFit: "cover" }}
+                                style={{
+                                    display: "block",
+                                    width: "100%",
+                                    height: isFS ? "calc(100vh - 120px)" : 240,
+                                    objectFit: "cover",
+                                }}
                             />
                             <video
                                 ref={localRef}
