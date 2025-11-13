@@ -1,11 +1,11 @@
-import { Outlet, useNavigate, NavLink, Link } from "react-router-dom";
+import { Outlet, NavLink, Link } from "react-router-dom";
 import { Topbar, Page } from "../ui/components";
 import { useAuth } from "../store/auth";
 import type React from "react";
 import VoiceHUD from "../components/VoiceHUD";
+import {redirectToLogin} from "../lib/api";
 
 export default function AppLayout() {
-    const navigate = useNavigate();
     const logout = useAuth((s) => s.logout);
 
     return (
@@ -35,7 +35,7 @@ export default function AppLayout() {
                     onClick={(e) => {
                         e.preventDefault();
                         logout();
-                        navigate("/login");
+                        redirectToLogin();
                     }}
                     title="Выйти"
                     aria-label="Выйти"

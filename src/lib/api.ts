@@ -7,6 +7,14 @@ const API_BASE_URL = import.meta.env.DEV
     ? (import.meta.env.VITE_DEV_API_BASE_URL as string | undefined) || `${BASE}/api`
     : (import.meta.env.VITE_API_BASE_URL as string | undefined) || `${BASE}/api`;
 
+export const LOGIN_PATH = `${BASE}/login`;
+
+export const redirectToLogin = () => {
+    if (location.pathname !== LOGIN_PATH) {
+        location.replace(LOGIN_PATH);
+    }
+};
+
 export interface AuthResponse {
     tokenType: string;
     accessToken: string;
@@ -95,13 +103,13 @@ api.interceptors.response.use(
 
         if (url.includes("/api/v1/auth/login") || url.includes("/api/v1/auth/refresh-token")) {
             useAuth.getState().forceLogout();
-            if (location.pathname !== "/login") location.replace("/login");
+            redirectToLogin();
             throw error;
         }
 
         if (original._retry) {
             useAuth.getState().forceLogout();
-            if (location.pathname !== "/login") location.replace("/login");
+            redirectToLogin();
             throw error;
         }
 
@@ -133,7 +141,7 @@ api.interceptors.response.use(
             return api(original);
         } catch (e) {
             useAuth.getState().forceLogout();
-            if (location.pathname !== "/login") location.replace("/login");
+            redirectToLogin();
             throw error;
         } finally {
             refreshing = null;
