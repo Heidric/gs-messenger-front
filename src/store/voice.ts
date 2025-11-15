@@ -193,14 +193,20 @@ export const useVoice = create<VoiceState>((set, get) => {
                 return;
             }
 
-            set({ roomId });
-
-            try { send({ type: "voice.join", data: { roomId } }); } catch {}
-
             const pc = makePC(peerId, () => get().roomId, (p) => set(p));
+
+            const hasLocalVideo = local.getVideoTracks().some(t => t.readyState === "live");
+
             set({
-                pc, peerId, connecting: true, active: true, error: null, ringing: false, incoming: undefined,
-                hasVideo: local.getVideoTracks().length > 0, camOff: local.getVideoTracks().length === 0
+                pc,
+                peerId,
+                connecting: true,
+                active: true,
+                error: null,
+                ringing: false,
+                incoming: undefined,
+                hasVideo: withVideo && hasLocalVideo,
+                camOff: !withVideo || !hasLocalVideo,
             });
 
             local.getTracks().forEach((t) => pc.addTrack(t, local));
@@ -213,12 +219,7 @@ export const useVoice = create<VoiceState>((set, get) => {
                 try { send({ type: "voice.end", data: { to: peerId, roomId } }); } catch {}
                 try { pc.close(); } catch {}
                 get().local?.getTracks().forEach((t) => t.stop());
-                get().remote?.getTracks().forEach((t) => t.stop());
-                set({
-                    pc: null, local: null, remote: null, active: false, connecting: false, ringing: false,
-                    incoming: undefined, peerId: undefined, roomId: undefined, error: "Не удалось создать оффер",
-                    hasVideo: false, camOff: false, muted: false,
-                });
+                set({ pc: null, active: false, connecting: false, error: "Не удалось начать звонок" });
             }
         },
 
@@ -245,9 +246,15 @@ export const useVoice = create<VoiceState>((set, get) => {
             }
 
             const pc = makePC(inc.fromId, () => get().roomId, (p) => set(p));
+            const hasLocalVideo = local.getVideoTracks().some(t => t.readyState === "live");
+            const hasRemoteVideo = hasVideoInSDP(inc.sdp);
+            const wantAnyVideo = hasLocalVideo || hasRemoteVideo;
             set({
-                pc, connecting: true, error: null,
-                hasVideo: local.getVideoTracks().length > 0, camOff: local.getVideoTracks().length === 0
+                pc,
+                connecting: true,
+                error: null,
+                hasVideo: wantAnyVideo,
+                camOff: !hasLocalVideo,
             });
 
             local.getTracks().forEach((t) => pc.addTrack(t, local));
