@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useVoice } from "../store/voice";
 import { Card, Button } from "../ui/components";
 
@@ -87,8 +87,14 @@ export default function ActiveCall() {
 
     const title = hasVideo ? "Видеозвонок" : "Голосовой звонок";
 
+    const videoHeight = isFS ? "calc(100vh - 160px)" : 240;
+
     const floatingStyle: React.CSSProperties = isFS
-        ? { width: "100%", maxWidth: "100%", position: "static", zIndex: 999 }
+        ? {
+            position: "fixed",
+            inset: 0,
+            zIndex: 999,
+        }
         : {
             position: "fixed",
             left: wasDragged ? pos.x : undefined,
@@ -104,7 +110,18 @@ export default function ActiveCall() {
 
     return (
         <div ref={containerRef} style={floatingStyle}>
-            <Card>
+            <Card
+                style={{
+                    pointerEvents: "auto",
+                    width: "100%",
+                    height: isFS ? "100vh" : "auto",
+                    maxWidth: isFS ? "100%" : 960,
+                    borderRadius: isFS ? 0 : 12,
+                    boxShadow: isFS ? "none" : undefined,
+                    display: "flex",
+                    flexDirection: "column",
+                }}
+            >
                 <div style={{ display: "grid", gap: 8 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 2px 2px" }}>
                         <div
@@ -144,14 +161,22 @@ export default function ActiveCall() {
                     )}
 
                     {hasVideo ? (
-                        <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", background: "#000" }}>
+                        <div
+                            style={{
+                                position: "relative",
+                                borderRadius: isFS ? 0 : 12,
+                                overflow: "hidden",
+                                background: "#000",
+                                height: videoHeight,
+                            }}
+                        >
                             <video
                                 ref={remoteRef}
                                 onDoubleClick={toggleFS}
                                 style={{
                                     display: "block",
                                     width: "100%",
-                                    height: isFS ? "calc(100vh - 120px)" : 240,
+                                    height: "100%",
                                     objectFit: "cover",
                                 }}
                             />
@@ -168,6 +193,7 @@ export default function ActiveCall() {
                                     objectFit: "cover",
                                     opacity: camOff ? 0.3 : 1,
                                     outline: "1px solid rgba(255,255,255,.2)",
+                                    background: "#000",
                                 }}
                             />
                         </div>
